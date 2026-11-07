@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, useContext, useEffect, useReducer } from "react";
-import { seedResults, simulateCapture } from "./seed";
-import type { DiagnosticResult, PatientExplanation, Role } from "./types";
+import { PATHOLOGIST, seedResults, simulateCapture, TECHNOLOGIST } from "./seed";
+import type { DiagnosticResult, Flag, PatientExplanation, ResultValue, Role } from "./types";
 
-const STORAGE_KEY = "unhack-demo-v3";
+const STORAGE_KEY = "unhack-demo-v4";
 
 type Action =
   | { type: "load"; results: DiagnosticResult[] }
@@ -14,6 +14,9 @@ type Action =
   | { type: "message"; id: string; from: Role; body: string }
   | { type: "resolve"; id: string }
   | { type: "capture" }
+  | { type: "submitScore"; id: string; values: ResultValue[]; flag: Flag; interpretation: string }
+  | { type: "signOut"; id: string; flag: Flag; interpretation: string }
+  | { type: "sendBack"; id: string; note: string }
   | {
       type: "share";
       id: string;
@@ -64,6 +67,28 @@ function reducer(state: State, action: Action): State {
       return update(state, action.id, (r) => ({ ...r, concern: "resolved" }));
     case "capture":
       return [simulateCapture(), ...state];
+    case "submitScore":
+      return update(state, action.id, (r) => ({
+        ...r,
+        labStage: "signout",
+        values: action.values,
+        flag: action.flag,
+        labInterpretation: action.interpretation,
+        scoredAt: now(),
+        scoredBy: TECHNOLOGIST.name,
+        returnNote: undefined,
+      }));
+    case "signOut":
+      return update(state, action.id, (r) => ({
+        ...r,
+        labStage: "released",
+        flag: action.flag,
+        labInterpretation: action.interpretation,
+        signedOutAt: now(),
+        signedOutBy: PATHOLOGIST.name,
+      }));
+    case "sendBack":
+      return update(state, action.id, (r) => ({ ...r, labStage: "scoring", returnNote: action.note }));
     case "share":
       return update(state, action.id, (r) => ({ ...r, ...action.details, sharedAt: now() }));
     case "requestAppointment":

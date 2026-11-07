@@ -21,7 +21,7 @@ Next.js 16 (App Router) + TypeScript + Tailwind CSS 4, Node 24, npm. Next 16 dif
 
 - All state is client-side: `src/lib/store.tsx` (useReducer + localStorage), seeded from `src/lib/seed.ts`. `StoreProvider` renders nothing until it has loaded in the browser, so pages are effectively client-rendered.
 - `cacheComponents` / `partialPrefetching` are off in `next.config.ts` because nothing renders on the server yet. Revisit when a backend lands.
-- A result with no `sharedAt` is a microscope capture awaiting doctor review (`/doctor/review/[id]`). Once shared, status = `stageOf()` in `src/lib/types.ts`: shared → opened → understood, plus separate concern and appointment states.
+- Pipeline: microscope capture → lab (`labStage`: `scoring` by a technologist → `signout` by a pathologist → `released`) → doctor review (`/doctor/review/[id]`, while `sharedAt` is unset) → patient. Doctors only see `released` results and never make the primary reading; images are never edited. Once shared, status = `stageOf()` in `src/lib/types.ts`: shared → opened → understood, plus separate concern and appointment states.
 - `src/lib/assays.ts` is the catalogue of fluorescence assays (probes, images, outcomes, suggested patient wording); seed data and the capture simulator build results from it.
 - Design tokens (colors, font) live in `src/app/globals.css` under `@theme`.
 

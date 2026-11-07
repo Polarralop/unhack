@@ -21,14 +21,16 @@ Diagnostic results often reach patients as raw reports or not at all. Doctors ha
 
 ## Users
 
+- **Lab technologist**: checks the scoring software's counts against the images and records findings.
+- **Pathologist**: reviews the scoring and signs out the report, or sends it back.
 - **Doctor / clinician** — publishes results, tracks their status, answers concerns.
 - **Patient** — receives results, reads a plain-language explanation, confirms understanding, asks questions.
 
 ## Prototype features
 
 1. **Testing via the microscope.** Hardware side, out of scope for this app; simulated by a "Simulate a microscope capture" button.
-2. **Result pictures → doctor feed.** Each capture (images, lab findings, lab interpretation) lands in a "From the microscope" queue for review.
-3. **Doctor reviews and shares.** The doctor checks the images and findings, edits suggested patient wording, next steps and an optional comprehension check, and shares the result.
+2. **Lab review in the platform.** Each capture lands in the lab's scoring queue. A technologist scores it, then a pathologist signs it out (or sends it back). Lab review happens inside the platform rather than as an external hand-off, while responsibility stays with the lab. Images are never edited.
+3. **Doctor reviews and shares.** Signed-out results land in the doctor's "Ready for your review" feed. The doctor checks the images and the signed report, edits suggested patient wording, next steps and an optional comprehension check, and shares the result.
 4. **Patient reviews and responds.** The patient sees a plain-language summary, what it means, next steps, the microscopy images (expandable preview + download) and detailed findings. They confirm they understand and can ask questions.
 
 ### Results that may mean cancer
@@ -41,13 +43,16 @@ Real microscope integration, real authentication, persistence, EHR/HL7/FHIR inte
 
 ## Result status model (draft)
 
-`captured` (awaiting doctor review) → `shared` → `opened` → `understood`. Separate from that: concern state `none` | `open` | `resolved`, and for come-in results, appointment `requested` → `booked`.
+Lab: `scoring` → `signout` → `released` (a pathologist can send a capture back to `scoring`). Then: `shared` → `opened` → `understood`. Separate from that: concern state `none` | `open` | `resolved`, and for come-in results, appointment `requested` → `booked`.
 
 ## Open questions
 
 - Decided: FISH, immunofluorescence and fluorescence cytology are all offered.
 - Decided: results include the microscopy images, with an expandable preview and download.
 - Decided: possible cancer diagnoses are non-explicit and ask the patient to come in.
+- Decided: lab review lives in the platform as its own role (technologist scores, pathologist signs out). The doctor communicates but doesn't make the primary reading. Images aren't edited.
+- Setting: a hospital or health centre where the lab and clinicians share one system.
+- Should the doctor be able to send a question back to the lab about a signed-out report?
 - What image format will the real microscope produce (TIFF / OME-TIFF), and do patients download the original or a web-friendly copy?
 - Should the clinic book appointments in-app, or keep the "we'll call you" request?
 

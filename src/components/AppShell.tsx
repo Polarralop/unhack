@@ -2,38 +2,44 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CURRENT_PATIENT_ID, DOCTOR, PATIENTS } from "@/lib/seed";
+import { CENTRE, CURRENT_PATIENT_ID, DOCTOR, PATHOLOGIST, PATIENTS, TECHNOLOGIST } from "@/lib/seed";
 import { useStore } from "@/lib/store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { dispatch } = useStore();
-  const role = pathname.startsWith("/doctor") ? "doctor" : pathname.startsWith("/patient") ? "patient" : null;
+  const role = (["lab", "doctor", "patient"] as const).find((r) => pathname.startsWith(`/${r}`)) ?? null;
   const patient = PATIENTS.find((p) => p.id === CURRENT_PATIENT_ID)!;
+  const who = {
+    lab: `${TECHNOLOGIST.name} and ${PATHOLOGIST.name}`,
+    doctor: DOCTOR.name,
+    patient: patient.name,
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <Link href="/" className="text-xl font-bold tracking-tight text-scrub-deep">
-            unhack
+            unhack <span className="text-base font-normal text-muted">{CENTRE}</span>
           </Link>
 
           {role && (
             <p className="text-sm text-muted">
               Signed in as{" "}
-              <span className="font-semibold text-ink">
-                {role === "doctor" ? DOCTOR.name : patient.name}
-              </span>
+              <span className="font-semibold text-ink">{who[role]}</span>
             </p>
           )}
 
           <nav aria-label="Switch view" className="ml-auto flex items-center gap-1 rounded-full border border-line p-1 text-sm">
+            <ViewLink href="/lab" active={role === "lab"}>
+              Lab
+            </ViewLink>
             <ViewLink href="/doctor" active={role === "doctor"}>
-              Doctor view
+              Doctor
             </ViewLink>
             <ViewLink href="/patient" active={role === "patient"}>
-              Patient view
+              Patient
             </ViewLink>
           </nav>
         </div>

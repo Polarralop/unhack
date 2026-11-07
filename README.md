@@ -6,11 +6,14 @@ A results hub for **fluorescence microscopy** tests used to detect and monitor c
 
 ## The core loop
 
-1. **Microscope captures the sample** (hardware, simulated here). Images, lab findings and the lab's interpretation land in the doctor's **From the microscope** feed.
-2. **Doctor reviews and shares**: checks the images and findings, edits the suggested plain-language explanation, next steps and comprehension check, and shares it with the patient.
-3. **Patient reviews the result**: plain-language summary, what it means, next steps, the microscopy images (expand or download) and the lab's detailed findings.
-4. **Patient confirms understanding, asks questions, and comes in when needed.** Results that may mean a new or changed cancer diagnosis are worded gently, never explicitly, and ask the patient to come in, with a **Request an appointment** button.
-5. **Doctor follows up**: sees unopened results, misunderstandings, open questions and appointment requests, and closes the loop.
+Built for a hospital or health centre where the lab, the ordering doctor and the patient all use one system.
+
+1. **Microscope captures the sample** (hardware, simulated here). The capture lands in the **lab's scoring queue**. Images are stored exactly as captured and can't be edited.
+2. **Lab scores and signs out**: a technologist checks the scoring software's pre-counts against the images and records the findings; a pathologist reviews them and signs out the report (or sends it back for re-scoring). Only signed-out results reach the doctor.
+3. **Doctor reviews and shares**: checks the images and signed report, edits the suggested plain-language explanation, next steps and comprehension check, and shares it with the patient.
+4. **Patient reviews the result**: plain-language summary, what it means, next steps, the microscopy images (expand or download) and the lab's detailed findings.
+5. **Patient confirms understanding, asks questions, and comes in when needed.** Results that may mean a new or changed cancer diagnosis are worded gently, never explicitly, and ask the patient to come in, with a **Request an appointment** button.
+6. **Doctor follows up**: sees unopened results, misunderstandings, open questions and appointment requests, and closes the loop.
 
 See [docs/product-brief.md](docs/product-brief.md) for scope and open questions.
 
@@ -31,13 +34,14 @@ npm install
 npm run dev    # http://localhost:3000
 ```
 
-Open the home page and pick **Doctor view** or **Patient view**; the switch in the top bar flips between them at any time. You play as **Dr. Amara Okafor** (doctor) and **Sam Rivera** (patient). Every action is saved in your browser's localStorage; use **Reset demo data** in the footer to start over.
+Open the home page and pick **Lab**, **Doctor** or **Patient**; the switch in the top bar flips between them at any time. You play as **Lee Chen** (technologist) and **Dr. Hana Sato** (pathologist) in the lab, **Dr. Amara Okafor** (doctor) and **Sam Rivera** (patient). Every action is saved in your browser's localStorage; use **Reset demo data** in the footer to start over.
 
 ### A two-minute demo
 
-1. **Doctor view**: click **Simulate a microscope capture**, open a capture from **From the microscope**, expand an image, adjust the suggested wording and **Share** it.
-2. **Patient view**: open the new *Urine cell test (FISH)*. Note the "would like to see you" request, then **Request an appointment**, look at the images, answer the check question and ask a question.
-3. **Doctor view**: the appointment request and question show up under **Needs your follow-up**. Reply, **Mark question answered**, and **Mark visit booked**.
+1. **Lab**: click **Simulate a microscope capture**, open it under **To score**, check the pre-counted values and **Send for sign-out**. Then open it under **Ready for sign-out** and **Sign out and release**.
+2. **Doctor**: open the result under **Ready for your review**, expand an image, adjust the suggested wording and **Share** it.
+3. **Patient**: open the new *Urine cell test (FISH)*. Note the "would like to see you" request, then **Request an appointment**, look at the images, answer the check question and ask a question.
+4. **Doctor**: the appointment request and question show up under **Needs your follow-up**. Reply, **Mark question answered**, and **Mark visit booked**.
 
 ### Scripts
 
@@ -54,12 +58,14 @@ Open the home page and pick **Doctor view** or **Patient view**; the switch in t
 src/
   app/
     page.tsx                      Home: pick a view
-    doctor/page.tsx               Dashboard: microscope feed, needs follow-up, shared results
-    doctor/review/[id]/           Review a capture and share it with the patient
+    lab/page.tsx                  Lab queues: to score, ready for sign-out, recently released
+    lab/[id]/                     Score a capture (technologist) or sign it out (pathologist)
+    doctor/page.tsx               Dashboard: ready for review, needs follow-up, shared results
+    doctor/review/[id]/           Review a signed-out result and share it with the patient
     doctor/results/[id]/          One shared result: status, images, lab findings, questions
     patient/page.tsx              Patient's results inbox
     patient/results/[id]/         Read, come-in request, images, check, confirm, ask a question
-  components/                     Journey, ImageGallery (preview + download), ComeInCallout, Thread, ValuesTable, badges
+  components/                     Journey, LabTrail, ImageGallery (preview + download), ComeInCallout, Thread, ValuesTable, badges
   lib/
     types.ts                      Data model
     assays.ts                     Fluorescence assay catalogue: probes, images, outcomes, suggested wording

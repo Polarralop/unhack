@@ -28,8 +28,11 @@ function patientName(id: string) {
 }
 
 export default function DoctorDashboard() {
-  const { results, dispatch } = useStore();
-  const incoming = results.filter((r) => !isShared(r)).sort((a, b) => b.capturedAt.localeCompare(a.capturedAt));
+  const { results } = useStore();
+  const atLab = results.filter((r) => r.labStage !== "released").length;
+  const incoming = results
+    .filter((r) => r.labStage === "released" && !isShared(r))
+    .sort((a, b) => (b.signedOutAt ?? "").localeCompare(a.signedOutAt ?? ""));
   const sharedResults = results.filter(isShared).sort((a, b) => b.sharedAt.localeCompare(a.sharedAt));
   const attention = sharedResults
     .map((r) => ({ r, reason: attentionReason(r) }))
@@ -45,22 +48,14 @@ export default function DoctorDashboard() {
       </div>
 
       <section aria-labelledby="incoming-heading">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 id="incoming-heading" className="text-xl font-bold">From the microscope</h2>
-            <p className="text-sm text-muted">New captures land here. Review each one and share it with the patient.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => dispatch({ type: "capture" })}
-            className="rounded-md border border-line bg-surface px-4 py-2 font-semibold hover:border-ink"
-          >
-            Simulate a microscope capture
-          </button>
-        </div>
+        <h2 id="incoming-heading" className="text-xl font-bold">Ready for your review</h2>
+        <p className="text-sm text-muted">
+          Signed out by the lab. Review each one and share it with the patient.
+          {atLab > 0 && ` ${atLab} more ${atLab === 1 ? "is" : "are"} still at the lab.`}
+        </p>
 
         {incoming.length === 0 ? (
-          <p className="mt-4 text-muted">You’re all caught up. New microscope captures will appear here.</p>
+          <p className="mt-4 text-muted">You’re all caught up. Results will appear here once the lab signs them out.</p>
         ) : (
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {incoming.map((r) => (
@@ -79,7 +74,7 @@ export default function DoctorDashboard() {
                     <p className="text-muted">{r.title}</p>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <FlagBadge flag={r.flag} />
-                      <span className="text-muted">Captured {relativeTime(r.capturedAt)}</span>
+                      <span className="text-muted">Signed out {relativeTime(r.signedOutAt!)}</span>
                     </div>
                   </div>
                 </Link>

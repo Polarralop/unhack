@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FlagBadge } from "@/components/Badges";
+import { LabTrail } from "@/components/LabTrail";
 import { ImageGallery } from "@/components/ImageGallery";
 import { ValuesTable } from "@/components/ValuesTable";
 import { METHODS, SPECIMENS } from "@/lib/assays";
@@ -20,6 +21,14 @@ export function ReviewView() {
     return (
       <p>
         This capture doesn’t exist. <Link href="/doctor" className="underline">Back to results</Link>
+      </p>
+    );
+  }
+  if (result.labStage !== "released") {
+    return (
+      <p>
+        This capture is still at the lab. It will appear in your feed once it’s signed out.{" "}
+        <Link href="/doctor" className="underline">Back to results</Link>
       </p>
     );
   }
@@ -97,21 +106,23 @@ function Review({ result }: { result: DiagnosticResult }) {
           Review: {patient.name}, {result.title}
         </h1>
         <p className="mt-1 text-muted">
-          Collected {shortDate(result.collectedAt)}. Captured by the microscope {relativeTime(result.capturedAt)}.
+          Collected {shortDate(result.collectedAt)}. Signed out by {result.signedOutBy}{" "}
+          {relativeTime(result.signedOutAt!)}.
         </p>
       </div>
 
       <div className="grid gap-10 lg:grid-cols-2">
         <section aria-labelledby="lab-heading" className="space-y-6">
-          <h2 id="lab-heading" className="text-xl font-bold">From the lab</h2>
+          <h2 id="lab-heading" className="text-xl font-bold">Lab report</h2>
+          <LabTrail result={result} />
           <ImageGallery images={result.images} probes={result.probes} title={`${patient.name} ${result.title}`} />
           <div className="rounded-lg border border-line bg-surface p-5">
             <div className="mb-3 flex items-center gap-2">
-              <span className="font-semibold">Lab call</span>
+              <span className="font-semibold">Signed-out result</span>
               <FlagBadge flag={result.flag} />
             </div>
             <p className="text-sm">{result.labInterpretation}</p>
-            <p className="mt-1 text-sm text-muted">Only you see the lab’s wording. The patient sees what you write.</p>
+            <p className="mt-1 text-sm text-muted">The patient never sees the lab’s wording, only what you write.</p>
             <div className="mt-4">
               <ValuesTable values={result.values} />
             </div>

@@ -1,3 +1,4 @@
+/** People who can write in a result's question thread. */
 export type Role = "doctor" | "patient";
 
 /**
@@ -16,14 +17,36 @@ export interface Person {
   detail: string;
 }
 
+/** How the lab decides whether a measurement is normal. */
+export type ValueRule =
+  | { kind: "below"; limit: number }
+  | { kind: "equals"; normal: string; options: string[] };
+
 export interface ResultValue {
   name: string;
   value: string;
   unit: string;
-  /** The cutoff the lab uses, e.g. "under 2.0". */
+  /** The cutoff in words, e.g. "under 2.0". Empty for context rows like "cells counted". */
   range: string;
+  /** Machine-readable cutoff, so the scoring form can flag values as they're entered. */
+  rule?: ValueRule;
   flag: ValueFlag;
 }
+
+export function flagFor(value: string, rule?: ValueRule): ValueFlag {
+  if (!rule) return "normal";
+  if (rule.kind === "equals") return value === rule.normal ? "normal" : "abnormal";
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) && n < rule.limit ? "normal" : "abnormal";
+}
+
+/**
+ * Where a capture is in the lab:
+ * - scoring: a technologist counts signals and records findings
+ * - signout: a pathologist checks the scoring and signs the report
+ * - released: signed out and available to the ordering doctor
+ */
+export type LabStage = "scoring" | "signout" | "released";
 
 export interface ProbeChannel {
   /** What the colour marks, e.g. "HER2 gene". */
@@ -83,15 +106,22 @@ export interface DiagnosticResult extends PatientExplanation {
   collectedAt: string;
   /** When the microscope captured the images. */
   capturedAt: string;
-  /** The lab's technical interpretation. Shown to the doctor only. */
+  labStage: LabStage;
+  /** The lab's technical interpretation. Never shown to the patient. */
   labInterpretation: string;
+  scoredAt?: string;
+  scoredBy?: string;
+  signedOutAt?: string;
+  signedOutBy?: string;
+  /** Set when the pathologist sends a capture back for re-scoring. */
+  returnNote?: string;
   flag: Flag;
   values: ResultValue[];
   probes: ProbeChannel[];
   images: MicroscopyImage[];
   /** Suggested patient wording, offered to the doctor during review. */
   suggested?: PatientExplanation;
-  /** Unset while the result is waiting for the doctor's review. */
+  /** Unset until the doctor has reviewed the released result and shared it. */
   sharedAt?: string;
   viewedAt?: string;
   acknowledgedAt?: string;

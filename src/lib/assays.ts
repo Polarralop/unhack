@@ -1,4 +1,4 @@
-import type { Flag, MicroscopyImage, PatientExplanation, ProbeChannel, ResultValue } from "./types";
+import type { Flag, MicroscopyImage, PatientExplanation, ProbeChannel, ResultValue, ValueRule } from "./types";
 
 // Catalogue of fluorescence microscopy assays the simulated microscope can
 // produce. Cutoffs are modelled on real FISH assays but simplified for the
@@ -6,6 +6,7 @@ import type { Flag, MicroscopyImage, PatientExplanation, ProbeChannel, ResultVal
 
 export interface AssayOutcome {
   flag: Flag;
+  /** What the microscope's scoring software pre-counts; the technologist checks these. */
   values: ResultValue[];
   labInterpretation: string;
   suggested: PatientExplanation;
@@ -20,6 +21,9 @@ export interface Assay {
   images: Omit<MicroscopyImage, "id">[];
   outcomes: AssayOutcome[];
 }
+
+const FOUND: ValueRule = { kind: "equals", normal: "Not found", options: ["Not found", "Found"] };
+const SEEN: ValueRule = { kind: "equals", normal: "None seen", options: ["None seen", "Seen"] };
 
 const NUCLEUS: ProbeChannel = { name: "Cell nucleus (DAPI)", color: "#3a52d0" };
 const RED = "#ff4a4a";
@@ -49,8 +53,8 @@ export const ASSAYS: Record<string, Assay> = {
       {
         flag: "positive",
         values: [
-          { name: "HER2 to chromosome 17 ratio", value: "2.6", unit: "ratio", range: "under 2.0", flag: "abnormal" },
-          { name: "Average HER2 copies per cell", value: "7.1", unit: "copies", range: "under 4.0", flag: "abnormal" },
+          { name: "HER2 to chromosome 17 ratio", value: "2.6", unit: "ratio", range: "under 2.0", rule: { kind: "below", limit: 2.0 }, flag: "abnormal" },
+          { name: "Average HER2 copies per cell", value: "7.1", unit: "copies", range: "under 4.0", rule: { kind: "below", limit: 4.0 }, flag: "abnormal" },
           { name: "Cells counted", value: "40", unit: "cells", range: "", flag: "normal" },
         ],
         labInterpretation:
@@ -86,7 +90,7 @@ export const ASSAYS: Record<string, Assay> = {
     outcomes: [
       {
         flag: "negative",
-        values: [{ name: "Cells with a split ALK signal", value: "4", unit: "% of cells", range: "under 15%", flag: "normal" }],
+        values: [{ name: "Cells with a split ALK signal", value: "4", unit: "% of cells", range: "under 15%", rule: { kind: "below", limit: 15 }, flag: "normal" }],
         labInterpretation: "NEGATIVE for ALK rearrangement. 2 of 50 nuclei (4%) with split signals; cutoff 15%.",
         suggested: {
           summary: "This test looked for a specific gene change in your biopsy and didn’t find it.",
@@ -113,7 +117,7 @@ export const ASSAYS: Record<string, Assay> = {
     outcomes: [
       {
         flag: "negative",
-        values: [{ name: "Cells with a split ROS1 signal", value: "2", unit: "% of cells", range: "under 15%", flag: "normal" }],
+        values: [{ name: "Cells with a split ROS1 signal", value: "2", unit: "% of cells", range: "under 15%", rule: { kind: "below", limit: 15 }, flag: "normal" }],
         labInterpretation: "NEGATIVE for ROS1 rearrangement. 1 of 50 nuclei (2%) with split signals; cutoff 15%.",
         suggested: {
           summary: "This test looked for another gene change in your biopsy and didn’t find it.",
@@ -148,8 +152,8 @@ export const ASSAYS: Record<string, Assay> = {
       {
         flag: "positive",
         values: [
-          { name: "Cells with extra chromosome copies (3, 7, 17)", value: "6", unit: "cells", range: "under 4", flag: "abnormal" },
-          { name: "Cells missing the 9p21 gene region", value: "2", unit: "cells", range: "under 12", flag: "normal" },
+          { name: "Cells with extra chromosome copies (3, 7, 17)", value: "6", unit: "cells", range: "under 4", rule: { kind: "below", limit: 4 }, flag: "abnormal" },
+          { name: "Cells missing the 9p21 gene region", value: "2", unit: "cells", range: "under 12", rule: { kind: "below", limit: 12 }, flag: "normal" },
           { name: "Cells looked at", value: "25", unit: "cells", range: "", flag: "normal" },
         ],
         labInterpretation:
@@ -189,9 +193,9 @@ export const ASSAYS: Record<string, Assay> = {
       {
         flag: "negative",
         values: [
-          { name: "BCL2 gene rearrangement", value: "Not found", unit: "", range: "not found", flag: "normal" },
-          { name: "BCL6 gene rearrangement", value: "Not found", unit: "", range: "not found", flag: "normal" },
-          { name: "MYC gene rearrangement", value: "Not found", unit: "", range: "not found", flag: "normal" },
+          { name: "BCL2 gene rearrangement", value: "Not found", unit: "", range: "not found", rule: FOUND, flag: "normal" },
+          { name: "BCL6 gene rearrangement", value: "Not found", unit: "", range: "not found", rule: FOUND, flag: "normal" },
+          { name: "MYC gene rearrangement", value: "Not found", unit: "", range: "not found", rule: FOUND, flag: "normal" },
         ],
         labInterpretation: "NEGATIVE for BCL2, BCL6 and MYC rearrangement (break-apart probes, 200 nuclei each).",
         suggested: {
@@ -226,7 +230,7 @@ export const ASSAYS: Record<string, Assay> = {
     outcomes: [
       {
         flag: "negative",
-        values: [{ name: "Gene changes linked to melanoma", value: "Not found", unit: "", range: "not found", flag: "normal" }],
+        values: [{ name: "Gene changes linked to melanoma", value: "Not found", unit: "", range: "not found", rule: FOUND, flag: "normal" }],
         labInterpretation: "NEGATIVE. Melanoma FISH criteria not met (RREB1, MYB, CCND1, CEP6; 30 nuclei).",
         suggested: {
           summary: "The mole we removed doesn’t have the gene changes we were checking for.",
@@ -253,8 +257,8 @@ export const ASSAYS: Record<string, Assay> = {
       {
         flag: "positive",
         values: [
-          { name: "Cells with BCR-ABL1 fusion", value: "8", unit: "% of cells", range: "under 1%", flag: "abnormal" },
-          { name: "Previous result (3 months ago)", value: "0", unit: "% of cells", range: "under 1%", flag: "normal" },
+          { name: "Cells with BCR-ABL1 fusion", value: "8", unit: "% of cells", range: "under 1%", rule: { kind: "below", limit: 1 }, flag: "abnormal" },
+          { name: "Previous result (3 months ago)", value: "0", unit: "% of cells", range: "under 1%", rule: { kind: "below", limit: 1 }, flag: "normal" },
         ],
         labInterpretation: "POSITIVE. BCR-ABL1 dual fusion in 16 of 200 nuclei (8%). Previous: 0/200.",
         suggested: {
@@ -287,7 +291,7 @@ export const ASSAYS: Record<string, Assay> = {
     outcomes: [
       {
         flag: "negative",
-        values: [{ name: "Cytokeratin-positive cells", value: "None seen", unit: "", range: "none seen", flag: "normal" }],
+        values: [{ name: "Cytokeratin-positive cells", value: "None seen", unit: "", range: "none seen", rule: SEEN, flag: "normal" }],
         labInterpretation: "NEGATIVE. No cytokeratin-positive cells identified in 3 levels of the sentinel node.",
         suggested: {
           summary: "No concerning cells were found in the lymph node removed during your surgery.",

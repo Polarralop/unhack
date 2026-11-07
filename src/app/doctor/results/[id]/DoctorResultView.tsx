@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ConcernBadge, FlagBadge, VisitBadge } from "@/components/Badges";
 import { ImageGallery } from "@/components/ImageGallery";
+import { LabTrail } from "@/components/LabTrail";
 import { Journey } from "@/components/Journey";
 import { Thread } from "@/components/Thread";
 import { ValuesTable } from "@/components/ValuesTable";
@@ -118,7 +119,8 @@ export function DoctorResultView() {
           </section>
 
           <section aria-labelledby="lab-heading" className="space-y-3">
-            <h2 id="lab-heading" className="text-xl font-bold">Lab findings</h2>
+            <h2 id="lab-heading" className="text-xl font-bold">Lab report</h2>
+            <LabTrail result={result} />
             <div className="rounded-lg border border-line bg-surface p-5">
               <p className="mb-4 text-sm">{result.labInterpretation}</p>
               <ValuesTable values={result.values} />

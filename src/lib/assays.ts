@@ -304,6 +304,14 @@ export const ASSAYS: Record<string, Assay> = {
   },
 };
 
+/**
+ * Suggested patient wording for a result, matched on the lab's final call.
+ * Undefined when the catalogue has no wording for that outcome yet.
+ */
+export function suggestionFor(assayKey: string, flag: Flag): PatientExplanation | undefined {
+  return ASSAYS[assayKey]?.outcomes.find((o) => o.flag === flag)?.suggested;
+}
+
 /** Methods offered when reviewing a result. */
 export const METHODS = ["FISH", "Immunofluorescence", "Fluorescence cytology"];
 

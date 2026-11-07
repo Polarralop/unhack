@@ -1,11 +1,11 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- static demo SVGs, no optimisation needed */
-
 import { useEffect, useRef, useState } from "react";
 import type { MicroscopyImage, ProbeChannel } from "@/lib/types";
+import { MicroscopyImg, useImageUrls } from "./MicroscopyImg";
 
 function fileName(title: string, img: MicroscopyImage) {
+  if (img.upload) return img.upload.fileName;
   const base = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   const ext = img.src.split(".").pop();
   return `${base}-${img.magnification.replace("×", "x")}.${ext}`;
@@ -45,7 +45,7 @@ export function ImageGallery({
   }, [open]);
 
   if (images.length === 0) return null;
-  const current = open !== null ? images[open] : null;
+  const current = open !== null ? images[open] : undefined;
   const step = (delta: number) =>
     setOpen((i) => (i === null ? i : (i + delta + images.length) % images.length));
 
@@ -59,7 +59,11 @@ export function ImageGallery({
               onClick={() => setOpen(i)}
               className="group block w-full overflow-hidden rounded-md border border-line bg-black text-left"
             >
-              <img src={img.src} alt={`${title}: ${img.caption}, ${img.magnification}`} className="aspect-[4/3] w-full object-cover" />
+              <MicroscopyImg
+                image={img}
+                alt={`${title}: ${img.caption}, ${img.magnification}`}
+                className="aspect-[4/3] w-full object-cover"
+              />
               <span className="flex items-center justify-between gap-2 bg-surface px-3 py-2 text-sm">
                 <span>
                   {img.caption} <span className="text-muted">({img.magnification})</span>
@@ -95,13 +99,7 @@ export function ImageGallery({
                 </span>
               </p>
               <div className="flex items-center gap-2">
-                <a
-                  href={current.src}
-                  download={fileName(title, current)}
-                  className="rounded-md bg-white px-4 py-2 font-semibold text-ink hover:bg-white/90"
-                >
-                  Download
-                </a>
+                <DownloadLink image={current} fileName={fileName(title, current)} />
                 <button
                   type="button"
                   onClick={() => setOpen(null)}
@@ -114,7 +112,7 @@ export function ImageGallery({
             </div>
 
             <div className="relative mt-3 flex min-h-0 flex-1 items-center justify-center">
-              <img src={current.src} alt={`${title}: ${current.caption}`} className="max-h-full max-w-full object-contain" />
+              <MicroscopyImg image={current} alt={`${title}: ${current.caption}`} className="max-h-full max-w-full object-contain" />
               {images.length > 1 && (
                 <>
                   <button
@@ -144,5 +142,20 @@ export function ImageGallery({
         )}
       </dialog>
     </div>
+  );
+}
+
+/** Downloads the original file exactly as captured. */
+function DownloadLink({ image, fileName }: { image: MicroscopyImage; fileName: string }) {
+  const urls = useImageUrls(image);
+  return (
+    <a
+      href={urls?.original}
+      download={fileName}
+      aria-disabled={!urls}
+      className="rounded-md bg-white px-4 py-2 font-semibold text-ink hover:bg-white/90 aria-disabled:opacity-50"
+    >
+      Download original
+    </a>
   );
 }

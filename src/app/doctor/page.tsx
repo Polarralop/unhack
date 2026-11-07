@@ -1,10 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- static demo SVGs */
-
 import Link from "next/link";
 import { ConcernBadge, FlagBadge, VisitBadge } from "@/components/Badges";
 import { Journey } from "@/components/Journey";
+import { MicroscopyImg } from "@/components/MicroscopyImg";
 import { daysSince, relativeTime } from "@/lib/format";
 import { PATIENTS } from "@/lib/seed";
 import { useStore } from "@/lib/store";
@@ -64,11 +63,7 @@ export default function DoctorDashboard() {
                   href={`/doctor/review/${r.id}`}
                   className="flex gap-4 rounded-lg border border-line bg-surface p-3 hover:border-scrub"
                 >
-                  <img
-                    src={r.images[0]?.src}
-                    alt=""
-                    className="size-24 shrink-0 rounded bg-black object-cover"
-                  />
+                  <MicroscopyImg image={r.images[0]} alt="" className="size-24 shrink-0 rounded bg-black object-cover" />
                   <div className="min-w-0 space-y-1">
                     <p className="font-semibold">{patientName(r.patientId)}</p>
                     <p className="text-muted">{r.title}</p>

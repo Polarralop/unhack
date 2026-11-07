@@ -57,8 +57,13 @@ export interface ProbeChannel {
 
 export interface MicroscopyImage {
   id: string;
-  /** Path under /public. */
+  /**
+   * Path under /public for demo images. Empty for uploaded images, which live
+   * in the browser's IndexedDB under `id` (see src/lib/imageStore.ts).
+   */
   src: string;
+  /** Set for uploaded images: the original file's name and type. */
+  upload?: { fileName: string; type: string; size: number };
   /** e.g. "Overview, 40×" */
   caption: string;
   magnification: string;
@@ -98,6 +103,10 @@ export type ConcernState = "none" | "open" | "resolved";
 export interface DiagnosticResult extends PatientExplanation {
   id: string;
   patientId: string;
+  /** Key into ASSAYS (src/lib/assays.ts). */
+  assayKey: string;
+  /** Simulated demo capture, or images uploaded from the microscope camera. */
+  source: "simulated" | "upload";
   title: string;
   /** Fluorescence microscopy method, e.g. "FISH" or "Immunofluorescence". */
   method: string;

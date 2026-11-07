@@ -1,5 +1,5 @@
 import { ASSAYS } from "./assays";
-import type { DiagnosticResult, PatientExplanation, Person } from "./types";
+import type { DiagnosticResult, MicroscopyImage, PatientExplanation, Person } from "./types";
 
 // All people and results below are fictional demo data.
 
@@ -67,6 +67,8 @@ export function newCapture(opts: {
     ...EMPTY_EXPLANATION,
     id: opts.id,
     patientId: opts.patientId,
+    assayKey: assay.key,
+    source: "simulated",
     title: assay.title,
     method: assay.method,
     specimen: assay.specimen,
@@ -79,6 +81,40 @@ export function newCapture(opts: {
     probes: assay.probes,
     images: assay.images.map((img, i) => ({ ...img, id: `${opts.id}-img${i + 1}` })),
     suggested: outcome.suggested,
+    concern: "none",
+    messages: [],
+  };
+}
+
+/**
+ * A capture uploaded from the real microscope camera. Values start blank:
+ * there's no counting software, so the technologist enters what they count.
+ */
+export function uploadedCapture(opts: {
+  id: string;
+  assay: string;
+  patientId: string;
+  collectedAt: string;
+  images: MicroscopyImage[];
+}): DiagnosticResult {
+  const assay = ASSAYS[opts.assay];
+  return {
+    ...EMPTY_EXPLANATION,
+    id: opts.id,
+    patientId: opts.patientId,
+    assayKey: assay.key,
+    source: "upload",
+    title: assay.title,
+    method: assay.method,
+    specimen: assay.specimen,
+    collectedAt: opts.collectedAt,
+    capturedAt: new Date().toISOString(),
+    labStage: "scoring",
+    labInterpretation: "",
+    flag: "negative",
+    values: assay.outcomes[0].values.map((v) => ({ ...v, value: "", flag: "normal" })),
+    probes: assay.probes,
+    images: opts.images,
     concern: "none",
     messages: [],
   };

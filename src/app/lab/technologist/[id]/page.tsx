@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { LabCaseView } from "./LabCaseView";
+import { LabCaseView } from "@/components/lab/LabCaseView";
 
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <LabCaseView />
+      <LabCaseView role="technologist" />
     </Suspense>
   );
 }

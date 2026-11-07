@@ -52,6 +52,8 @@ Lab: `scoring` → `signout` → `released` (a pathologist can send a capture ba
 - Decided: possible cancer diagnoses are non-explicit and ask the patient to come in.
 - Decided: lab review lives in the platform as its own role (technologist scores, pathologist signs out). The doctor communicates but doesn't make the primary reading. Images aren't edited.
 - Setting: a hospital or health centre where the lab and clinicians share one system.
+- Decided (prototype): technologists upload images from the microscope camera (JPEG/PNG/TIFF), stored in the browser only, on a single demo machine. Lab has separate technologist and pathologist views.
+- Later: per-channel images combined into a colour composite; automatic pickup from the camera's save folder; shared storage across devices.
 - Should the doctor be able to send a question back to the lab about a signed-out report?
 - What image format will the real microscope produce (TIFF / OME-TIFF), and do patients download the original or a web-friendly copy?
 - Should the clinic book appointments in-app, or keep the "we'll call you" request?

@@ -7,7 +7,7 @@ import { FlagBadge } from "@/components/Badges";
 import { LabTrail } from "@/components/LabTrail";
 import { ImageGallery } from "@/components/ImageGallery";
 import { ValuesTable } from "@/components/ValuesTable";
-import { METHODS, SPECIMENS } from "@/lib/assays";
+import { METHODS, SPECIMENS, suggestionFor } from "@/lib/assays";
 import { relativeTime, shortDate } from "@/lib/format";
 import { PATIENTS } from "@/lib/seed";
 import { useResult, useStore } from "@/lib/store";
@@ -50,7 +50,8 @@ function Review({ result }: { result: DiagnosticResult }) {
   const { dispatch } = useStore();
   const router = useRouter();
   const patient = PATIENTS.find((p) => p.id === result.patientId)!;
-  const s = result.suggested;
+  // Based on the lab's signed-out call, so it fits uploads and re-scored captures too.
+  const s = suggestionFor(result.assayKey, result.flag);
   const sCheck = s?.check;
 
   const [method, setMethod] = useState(result.method);
@@ -132,11 +133,11 @@ function Review({ result }: { result: DiagnosticResult }) {
         <form onSubmit={share} className="space-y-8">
           <div>
             <h2 className="text-xl font-bold">For {patient.name}</h2>
-            {s && (
-              <p className="mt-1 text-muted">
-                Pre-filled with suggested wording for this result. Edit anything before you share.
-              </p>
-            )}
+            <p className="mt-1 text-muted">
+              {s
+                ? "Pre-filled with suggested wording for this result. Edit anything before you share."
+                : "There’s no suggested wording for this result yet. Write it in your own words."}
+            </p>
           </div>
 
           <fieldset className="grid gap-4 sm:grid-cols-2">

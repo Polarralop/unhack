@@ -14,6 +14,7 @@ type Action =
   | { type: "message"; id: string; from: Role; body: string }
   | { type: "resolve"; id: string }
   | { type: "capture" }
+  | { type: "addCapture"; result: DiagnosticResult }
   | { type: "submitScore"; id: string; values: ResultValue[]; flag: Flag; interpretation: string }
   | { type: "signOut"; id: string; flag: Flag; interpretation: string }
   | { type: "sendBack"; id: string; note: string }
@@ -67,6 +68,8 @@ function reducer(state: State, action: Action): State {
       return update(state, action.id, (r) => ({ ...r, concern: "resolved" }));
     case "capture":
       return [simulateCapture(), ...state];
+    case "addCapture":
+      return [action.result, ...state];
     case "submitScore":
       return update(state, action.id, (r) => ({
         ...r,

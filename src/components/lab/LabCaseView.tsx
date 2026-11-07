@@ -14,31 +14,36 @@ import { flagFor, type DiagnosticResult, type Flag, type ResultValue } from "@/l
 
 const field = "w-full rounded-md border border-line bg-surface px-3 py-2";
 
-export function LabCaseView() {
+export type LabRole = "technologist" | "pathologist";
+
+export function LabCaseView({ role }: { role: LabRole }) {
   const { id } = useParams<{ id: string }>();
   const result = useResult(id);
+  const home = `/lab/${role}`;
 
   if (!result) {
     return (
       <p>
-        This case doesn’t exist. <Link href="/lab" className="underline">Back to the lab</Link>
+        This case doesn’t exist. <Link href={home} className="underline">Back to your list</Link>
       </p>
     );
   }
+  const canScore = role === "technologist" && result.labStage === "scoring";
+  const canSignOut = role === "pathologist" && result.labStage === "signout";
   const patient = PATIENTS.find((p) => p.id === result.patientId)!;
 
   return (
     <div className="space-y-8">
       <div>
-        <Link href="/lab" className="text-sm text-muted hover:text-ink">
-          ← Lab
+        <Link href={home} className="text-sm text-muted hover:text-ink">
+          ← {role === "technologist" ? "Scoring" : "Sign-out"}
         </Link>
         <h1 className="mt-3 text-3xl font-bold tracking-tight">
           {patient.name}, {result.title}
         </h1>
         <p className="mt-1 text-muted">
           {result.method} on {result.specimen.toLowerCase()}. Collected {shortDate(result.collectedAt)}, ordered by{" "}
-          {DOCTOR.name}.
+          {DOCTOR.name}. {result.source === "upload" ? "Uploaded from the microscope camera." : "Simulated capture."}
         </p>
       </div>
 
@@ -53,9 +58,9 @@ export function LabCaseView() {
 
         {/* key: reset form state when the case moves to a new stage */}
         <div key={result.labStage}>
-          {result.labStage === "scoring" && <ScoreForm result={result} />}
-          {result.labStage === "signout" && <SignOutForm result={result} />}
-          {result.labStage === "released" && <ReleasedReport result={result} />}
+          {canScore && <ScoreForm result={result} home={home} />}
+          {canSignOut && <SignOutForm result={result} home={home} />}
+          {!canScore && !canSignOut && <ReadOnlyReport result={result} />}
         </div>
       </div>
     </div>
@@ -83,13 +88,15 @@ function CallChoice({ flag, setFlag, suggested }: { flag: Flag; setFlag: (f: Fla
   );
 }
 
-function ScoreForm({ result }: { result: DiagnosticResult }) {
+function ScoreForm({ result, home }: { result: DiagnosticResult; home: string }) {
   const { dispatch } = useStore();
   const router = useRouter();
   const [values, setValues] = useState<ResultValue[]>(result.values);
   const [interpretation, setInterpretation] = useState(result.labInterpretation);
   const withFlags = values.map((v) => ({ ...v, flag: flagFor(v.value, v.rule) }));
-  const suggested: Flag = withFlags.some((v) => v.flag === "abnormal") ? "positive" : "negative";
+  // Only judge from values that have been entered; uploads start blank.
+  const entered = withFlags.filter((v) => v.rule && v.value.trim());
+  const suggested: Flag = entered.some((v) => v.flag === "abnormal") ? "positive" : "negative";
   const [flag, setFlag] = useState<Flag>(suggested);
 
   function setValue(i: number, value: string) {
@@ -102,7 +109,7 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
     e.preventDefault();
     if (!complete) return;
     dispatch({ type: "submitScore", id: result.id, values: withFlags, flag, interpretation: interpretation.trim() });
-    router.push("/lab");
+    router.push(home);
   }
 
   return (
@@ -110,8 +117,9 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
       <div>
         <h2 className="text-xl font-bold">Score</h2>
         <p className="text-sm text-muted">
-          {TECHNOLOGIST.name}, {TECHNOLOGIST.detail.toLowerCase()}. Values are pre-counted by the microscope’s
-          scoring software. Check each one against the images and correct it if needed.
+          {result.source === "upload"
+            ? "Count the signals in the images and enter what you find."
+            : "Values are pre-counted by the microscope’s scoring software. Check each one against the images and correct it if needed."}
         </p>
       </div>
 
@@ -132,6 +140,9 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
             <div className="flex items-center gap-2">
               {v.rule?.kind === "equals" ? (
                 <select id={`v-${i}`} value={v.value} onChange={(e) => setValue(i, e.target.value)} className={field}>
+                  <option value="" disabled>
+                    Choose…
+                  </option>
                   {v.rule.options.map((o) => (
                     <option key={o}>{o}</option>
                   ))}
@@ -147,7 +158,7 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
               )}
               <span className="w-20 shrink-0 text-sm text-muted">{v.unit}</span>
             </div>
-            {v.rule && (
+            {v.rule && v.value.trim() && (
               <p className={`text-sm font-semibold sm:col-span-2 ${v.flag === "abnormal" ? "text-alert" : "text-scrub-deep"}`}>
                 {v.flag === "abnormal" ? "Abnormal" : "Normal"}
               </p>
@@ -156,7 +167,7 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
         ))}
       </ul>
 
-      <CallChoice flag={flag} setFlag={setFlag} suggested={suggested} />
+      <CallChoice flag={flag} setFlag={setFlag} suggested={entered.length > 0 ? suggested : undefined} />
 
       <label className="block space-y-1.5">
         <span className="font-semibold">Technical interpretation</span>
@@ -175,7 +186,7 @@ function ScoreForm({ result }: { result: DiagnosticResult }) {
   );
 }
 
-function SignOutForm({ result }: { result: DiagnosticResult }) {
+function SignOutForm({ result, home }: { result: DiagnosticResult; home: string }) {
   const { dispatch } = useStore();
   const router = useRouter();
   const [flag, setFlag] = useState<Flag>(result.flag);
@@ -186,14 +197,14 @@ function SignOutForm({ result }: { result: DiagnosticResult }) {
   function signOut() {
     if (!interpretation.trim()) return;
     dispatch({ type: "signOut", id: result.id, flag, interpretation: interpretation.trim() });
-    router.push("/lab");
+    router.push(home);
   }
 
   function sendBack(e: React.FormEvent) {
     e.preventDefault();
     if (!note.trim()) return;
     dispatch({ type: "sendBack", id: result.id, note: note.trim() });
-    router.push("/lab");
+    router.push(home);
   }
 
   return (
@@ -201,8 +212,7 @@ function SignOutForm({ result }: { result: DiagnosticResult }) {
       <div>
         <h2 className="text-xl font-bold">Sign out</h2>
         <p className="text-sm text-muted">
-          {PATHOLOGIST.name}, {PATHOLOGIST.detail.toLowerCase()}. Scored by {result.scoredBy}{" "}
-          {relativeTime(result.scoredAt!)}.
+          Scored by {result.scoredBy} {relativeTime(result.scoredAt!)}. Check the values against the images before signing.
         </p>
       </div>
 
@@ -267,16 +277,30 @@ function SignOutForm({ result }: { result: DiagnosticResult }) {
   );
 }
 
-function ReleasedReport({ result }: { result: DiagnosticResult }) {
+/** What a lab role sees when the case isn't theirs to act on right now. */
+function ReadOnlyReport({ result }: { result: DiagnosticResult }) {
+  const status = {
+    scoring: `Being scored by ${TECHNOLOGIST.name}.`,
+    signout: `Scored and waiting for sign-out by ${PATHOLOGIST.name}.`,
+    released: result.sharedAt
+      ? `Signed out. ${DOCTOR.name} shared it with the patient ${relativeTime(result.sharedAt)}.`
+      : `Signed out. Waiting for ${DOCTOR.name} to review and share it with the patient.`,
+  }[result.labStage];
+
+  if (result.labStage === "scoring") {
+    return (
+      <div className="space-y-2">
+        <h2 className="text-xl font-bold">Not scored yet</h2>
+        <p className="text-muted">{status}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold">Signed report</h2>
-        <p className="text-sm text-muted">
-          {result.sharedAt
-            ? `${DOCTOR.name} shared this with the patient ${relativeTime(result.sharedAt)}.`
-            : `Waiting for ${DOCTOR.name} to review and share with the patient.`}
-        </p>
+        <h2 className="text-xl font-bold">{result.labStage === "released" ? "Signed report" : "Scored, not signed"}</h2>
+        <p className="text-sm text-muted">{status}</p>
       </div>
       <div className="space-y-4 rounded-lg border border-line bg-surface p-4">
         <div className="flex items-center gap-2">

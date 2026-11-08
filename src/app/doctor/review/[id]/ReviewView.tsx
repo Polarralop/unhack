@@ -123,7 +123,7 @@ function Review({ result }: { result: DiagnosticResult }) {
               <FlagBadge flag={result.flag} />
             </div>
             <p className="text-sm">{result.labInterpretation}</p>
-            <p className="mt-1 text-sm text-muted">The patient never sees the lab’s wording, only what you write.</p>
+            <p className="mt-1 text-sm text-muted">Text above is hidden from patient.</p>
             <div className="mt-4">
               <ValuesTable values={result.values} />
             </div>

@@ -52,7 +52,6 @@ export function LabCaseView({ role }: { role: LabRole }) {
       <div className="grid gap-10 lg:grid-cols-2">
         <section aria-labelledby="images-heading" className="space-y-3">
           <h2 id="images-heading" className="text-xl font-bold">Microscope images</h2>
-          <p className="text-sm text-muted">Stored exactly as captured. Images can’t be edited.</p>
           <ImageGallery images={result.images} probes={result.probes} title={`${patient.name} ${result.title}`} />
         </section>
 

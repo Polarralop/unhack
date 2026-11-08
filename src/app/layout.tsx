@@ -10,7 +10,7 @@ const atkinson = Atkinson_Hyperlegible_Next({
 });
 
 export const metadata: Metadata = {
-  title: "unhack — results, understood",
+  title: "GlowLab — results, understood",
   description: "Prototype: share diagnostic results so patients receive and understand them.",
 };
 

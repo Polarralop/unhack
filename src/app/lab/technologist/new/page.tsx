@@ -132,7 +132,7 @@ export default function UploadCapture() {
       </Link>
       <h1 className="mt-3 text-3xl font-bold tracking-tight">Upload a capture</h1>
       <p className="mt-1 text-muted">
-        Add the images exported from the microscope camera. They’re stored exactly as uploaded, in this browser only.
+        Upload images exported from the microscope camera.
       </p>
 
       <form onSubmit={save} className="mt-8 space-y-8">

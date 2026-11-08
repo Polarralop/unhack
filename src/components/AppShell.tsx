@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="border-b border-line bg-surface">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
           <Link href="/" className="text-xl font-bold tracking-tight text-scrub-deep">
-            unhack <span className="text-base font-normal text-muted">{CENTRE}</span>
+            GlowLab <span className="text-base font-normal text-muted">{CENTRE}</span>
           </Link>
 
           {role && (

@@ -72,7 +72,7 @@ export function Thread({
           placeholder={
             as === "patient"
               ? "For example: does this mean I need to change my medication?"
-              : "Write a plain-language answer"
+              : "Write a response"
           }
           className="w-full rounded-md border border-line bg-surface px-3 py-2 placeholder:text-muted/70"
         />
